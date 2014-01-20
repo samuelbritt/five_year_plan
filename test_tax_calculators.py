@@ -435,7 +435,6 @@ class TestStateAgiCalculator(unittest.TestCase):
         income_tax_calculator = tax_calculators.StateIncomeTaxCalculator(self.family_rich, self.year, self.mock_tax_data)
         self.assertAlmostEqual(income_tax_calculator.calculate(), 13636, -1)
 
-
 class TestNetIncome(unittest.TestCase):
 
     class MockStateIncomeCalculator(tax_calculators.StateIncomeTaxCalculator):
@@ -521,6 +520,52 @@ class TestNetIncome(unittest.TestCase):
         net_income_calc = self.get_mocked_net_income_calculator(family)
         self.assertAlmostEqual(net_income_calc.calculate(), 123158, -1)
 
+class TestStatePropertyTax(unittest.TestCase):
+    """ see https://etax.dor.ga.gov/ptd/adm/taxguide/gen/rate.aspx"""
+    class MockPropertyTaxDao(data.PropertyTaxDao):
+        def __init__(self, state, year):
+            super().__init__(state, year)
+        def get_data(self):
+            return {
+                        'mill_rate': 25,
+                        'valuation_rate': 0.40
+                    }
+
+    class MockPropertyTaxData(data.PropertyTaxData):
+        def __init__(self, state, year):
+            super().__init__(state, year, TestStatePropertyTax.MockPropertyTaxDao(state, year))
+
+    class MockFamily(object):
+        def __init__(self):
+            super().__init__()
+            self.state_of_residence = 'GA'
+            self.home_value = 100000
+            self.owns_home_ = None
+
+        def owns_home(self):
+            return self.owns_home_
+
+    def setUp(self):
+        self.year = 2013
+        self.state = 'GA'
+        self.fam_with_home = self.MockFamily()
+        self.fam_with_home.owns_home_ = True
+
+        self.fam_without_home = self.MockFamily()
+        self.fam_without_home.owns_home_ = False
+
+    def tearDown(self):
+        pass
+
+    def test_with_home(self):
+        tax_data = self.MockPropertyTaxData(self.state, self.year)
+        calc = tax_calculators.StatePropertyTaxCalculator(self.fam_with_home, self.year, tax_data)
+        self.assertAlmostEqual(calc.calculate(), 1000)
+
+    def test_without_home(self):
+        tax_data = self.MockPropertyTaxData(self.state, self.year)
+        calc = tax_calculators.StatePropertyTaxCalculator(self.fam_without_home, self.year, tax_data)
+        self.assertAlmostEqual(calc.calculate(), 0)
 
 if __name__ == '__main__':
     unittest.main()

@@ -27,22 +27,22 @@ class Calculator(object):
         pass
 
 class FederalCalculator(Calculator):
-    """docstring for FederalCalculator"""
     def __init__(self, family, year, tax_data=None):
         super().__init__(family, year, tax_data)
-        # self._tax_data = tax_data
-
     def get_new_tax_data(self):
         return data.FederalTaxData(self.year, self.family.filing_status)
 
 class StateCalculator(Calculator):
-    """docstring for StateCalculator"""
     def __init__(self, family, year, tax_data=None):
         super().__init__(family, year, tax_data)
-        # self._tax_data = tax_data
-
     def get_new_tax_data(self):
         return data.StateTaxData(self.family.state_of_residence, self.year, self.family.filing_status)
+
+class PropertyCalculator(Calculator):
+    def __init__(self, family, year, tax_data=None):
+        super().__init__(family, year, tax_data)
+    def get_new_tax_data(self):
+        return data.PropertyTaxData(self.family.state_of_residence, self.year)
 
 class MagiCalculator(FederalCalculator):
     """Calculates MAGI"""
@@ -89,7 +89,6 @@ class StudentLoanInterestDeductionCalculator(FederalCalculator):
         phaseout_multiplier = (magi - phaseout_numerator_reduction) / float(phaseout_denominator)
         deduction_due_to_phaseout = max(total_interest_paid * phaseout_multiplier, 0.0)
         return max(total_interest_paid - deduction_due_to_phaseout, 0.0)
-        
 
 class FederalAgiCalculator(FederalCalculator):
     """docstring for FederalAgiCalculator"""
@@ -122,7 +121,6 @@ class FederalAgiCalculator(FederalCalculator):
         magi = self.magi_calculator.calculate()
         student_loan_interest_deduction = self.student_loan_interest_deduction_calculator.calculate()
         return magi - student_loan_interest_deduction
-
 
 class TaxBracketCalculator(Calculator):
     def __init__(self, family, year, tax_data, agi_calculator):
@@ -274,6 +272,18 @@ class StateIncomeTaxCalculator(StateCalculator):
         bracket_calculator = TaxBracketCalculator(self.family, self.year, self.tax_data, self.state_agi_calculator)
         return bracket_calculator.calculate()
 
+class StatePropertyTaxCalculator(StateCalculator):
+    """docstring for StateIncomeTaxCalculator"""
+    def __init__(self, family, year, tax_data=None):
+        super().__init__(family, year, tax_data)
+
+    def calculate(self):
+        property_tax = 0
+        if self.family.owns_home():
+            fair_market_value = self.family.home_value
+            assessed_value = fair_market_value * self.tax_data.valuation_rate
+            property_tax = assessed_value / 1000.0 * self.tax_data.mill_rate
+        return property_tax
 
 class TaxCalculator(Calculator):
     def __init__(

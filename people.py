@@ -76,6 +76,15 @@ class Family(object):
     def member_count(self):
         return len(self.members)
 
+    def owns_home(self):
+        return self.mortgage is not None
+
+    @property
+    def home_value(self):
+        value = 0
+        if owns_home():
+            value = self.mortgage.current_home_value
+        return value    
 
     def add_deduction(self, year, deduction):
         if year in self._additional_deductions:

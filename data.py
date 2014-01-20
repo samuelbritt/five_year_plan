@@ -22,13 +22,13 @@ federal_tax_data = {
             'exemption_amount_per_person': 3900.0,
             'student_loan_max_deduction': 2500.0,
             'student_loan_phaseout_denominator': 30000.0,
-            'student_loan_phaseout_numerator_reduction': 125000.0
+            'student_loan_phaseout_numerator_reduction': 125000.0,
         },
         FilingStatus.SINGLE: {
             'student_loan_max_deduction': 2500.0,
             'student_loan_phaseout_denominator': 15000.0,
-            'student_loan_phaseout_numerator_reduction': 60000.0
-        }
+            'student_loan_phaseout_numerator_reduction': 60000.0,
+        },
     },
     2014: {
         FilingStatus.MARRIED_JOINT: {
@@ -49,9 +49,9 @@ federal_tax_data = {
             'exemption_amount_per_person': 3950.0,
             'student_loan_max_deduction': 2500.0,
             'student_loan_phaseout_denominator': 30000.0,
-            'student_loan_phaseout_numerator_reduction': 130000.0
-        }
-    }
+            'student_loan_phaseout_numerator_reduction': 130000.0,
+        },
+    },
 }
 
 
@@ -72,8 +72,67 @@ state_tax_data = {
                 'standard_deduction_amount': 3000.0,
             },
         },
+        2014: {
+            FilingStatus.MARRIED_JOINT: {
+                # copied from 2013
+                'tax_brackets':
+                [
+                    (     0, 0.01 ),
+                    (  1000, 0.02 ),
+                    (  3000, 0.03 ),
+                    (  5000, 0.04 ),
+                    (  7000, 0.05 ),
+                    ( 10000, 0.06)
+                ],
+                'exemption_amount_per_person': 2700.0,
+                'standard_deduction_amount': 3000.0,
+            },
+        },
     },
 }
+
+property_tax_data = {
+    'GA': {
+        2013: {
+            'mill_rate': 30,
+            'valuation_rate': 0.40
+        },
+        2014: {
+            'mill_rate': 30,
+            'valuation_rate': 0.40
+        },
+    },
+}
+
+class PropertyTaxDao(object):
+    def __init__(self, state, year):
+        super().__init__()
+        self.state = state
+        self.year = year
+    def get_data(self):
+        return property_tax_data[self.state][self.year]
+
+class PropertyTaxData(object):
+    def __init__(self, state, year, tax_dao=None):
+        super().__init__()
+        self.year = year
+        self.state = state
+        self._tax_dao = tax_dao
+
+        _tax_data = self.tax_dao.get_data()
+
+        self.mill_rate = _tax_data['mill_rate']
+        self.valuation_rate = _tax_data['valuation_rate']
+
+    @property
+    def tax_dao(self):
+        if self._tax_dao is None:
+            self._tax_dao = PropertyTaxDao(self.state, self.year)
+        return self._tax_dao
+    @tax_dao.setter
+    def tax_dao(self, value):
+        self._tax_dao = value
+
 
 class FederalTaxDao(object):
     def __init__(self, year, filing_status):
