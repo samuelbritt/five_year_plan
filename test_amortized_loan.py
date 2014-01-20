@@ -6,8 +6,7 @@ import amortized_loan
 
 class TestAmortizedLoan(unittest.TestCase):
 	def setUp(self):
-		# tested against http://www.bankrate.com/calculators/mortgages/amortization-calculator.aspx
-		# and http://www.mortgagecalculator.org/
+		# http://www.mlcalc.com
 		self.amt = 200000
 		self.term = 30
 		self.apr = 0.05
@@ -19,7 +18,7 @@ class TestAmortizedLoan(unittest.TestCase):
 		pass
 
 	def test_min_pmt(self):
-		self.assertAlmostEqual(self.loan.min_payment, 1073.64, 2)
+		self.assertAlmostEqual(self.loan.minimum_payment, 1073.64, 2)
 
 	def test_final_results(self):
 		self.assertEqual(self.loan.last_payment_date, datetime.date(2014, 1, 1))
@@ -46,8 +45,8 @@ class TestAmortizedLoan(unittest.TestCase):
 		self.assertAlmostEqual(payments[-1].principle_amount, 1069.19, 2)
 
 	def test_table(self):
-		# pprint(loan.calculate_amortization_table())
-		pass
+		return
+		pprint(loan.calculate_amortization_table())
 
 
 if __name__ == '__main__':
