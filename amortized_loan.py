@@ -8,30 +8,26 @@ import enum
 CompoundType = enum.Enum(["MONTHLY", "DAILY"])
 
 class Payment(object):
-    def __init__(self, date, payment_amount, interest_amount, principle_amount):
+    def __init__(self, payment_date, payment_amount, current_balance, compounder):
         super().__init__()
-        self.date = date
+        self.date = payment_date
         self.payment_amount = payment_amount
-        self.interest_amount = interest_amount
-        self.principle_amount = principle_amount
+        self.previous_balance = current_balance
+
+        self.interest_amount = compounder.interest_amount(self.date)
+        self.principle_amount = max(self.payment_amount - self.interest_amount, 0)
+        self.new_balance = max(self.previous_balance - self.principle_amount, 0)
 
     def __str__(self):
-        return "Payment {year}-{month}-{day} {amt} ({int}i, {princ}p)".format(
-            year=self.date.year,
-            month=self.date.month,
-            day=self.date.day,
-            amt=self.payment_amount,
-            int=self.interest_amount,
-            princ=self.principle_amount
-        )
+        return self.__repr__()
+
     def __repr__(self):
-        return "Payment {year}-{month}-{day} {amt:6.2f} ({int:6.2f}i, {princ:6.2f}p)".format(
-            year=self.date.year,
-            month=self.date.month,
-            day=self.date.day,
+        return "Payment {date} {amt:>8.2f} ({princ:>8.2f} P, {int:>8.2f} I, {rem:>10.2f} R)".format(
+            date=self.date.isoformat(),
             amt=self.payment_amount,
+            princ=self.principle_amount,
             int=self.interest_amount,
-            princ=self.principle_amount
+            rem=self.new_balance
         )
 
 class Compunder(object):
@@ -61,7 +57,6 @@ class MonthlyCompounder(Compunder):
     def interest_amount(self, payment_date):
         return self.monthly_rate * self.loan.remaining_balance
         
-
 class DailyCompounder(Compunder):
     def __init__(self):
         super().__init__()
@@ -78,8 +73,6 @@ class DailyCompounder(Compunder):
     def interest_amount(self, payment_date):
         days_since_last_payment = (payment_date - self.loan.last_payment_date).days
         return (self.daily_rate * days_since_last_payment) * self.loan.remaining_balance
-
-
 
 class CompunderFactory(object):
     def __init__(self):
@@ -107,6 +100,12 @@ class AmortizedLoan(object):
         self.last_payment_date = start_date
         self.payments = []
 
+    @property
+    def total_interest_paid(self):
+        if not self.payments:
+            return 0
+        return sum((p.interest_amount for p in self.payments))
+
     def __str__(self):
         return "AmortizedLoan: {amt} for {term} years at {apr}%".format(amt=self.purchase_amount,
                                                                         term=self.term_in_years,
@@ -122,15 +121,14 @@ class AmortizedLoan(object):
 
         payment_amount = payment_amount if payment_amount is not None else self.min_payment
         payment_date = payment_date if payment_date is not None else self.add_month(self.last_payment_date)
-        interest_amount = self.compounder.interest_amount(payment_date)
-        principle_amount = max(payment_amount - interest_amount, 0)
 
-        payment = Payment(payment_date, payment_amount, interest_amount, principle_amount)
-        self.remaining_balance = max(self.remaining_balance - principle_amount, 0)
-        self.payments.append((payment, self.remaining_balance))
+
+        payment = Payment(payment_date, payment_amount, self.remaining_balance, self.compounder)
+        self.payments.append(payment)
         self.last_payment_date = payment_date
+        self.remaining_balance = payment.new_balance
 
-    def calculate_amortization_table(self):
+    def calculate_amortization_table(self, regular_payment_amount=None):
         while self.remaining_balance > 0:
-            self.make_payment()
+            self.make_payment(regular_payment_amount)
         return self.payments
