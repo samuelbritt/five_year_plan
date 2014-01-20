@@ -12,7 +12,9 @@ class TestAmortizedLoan(unittest.TestCase):
 		self.apr = 0.05
 		start_date = datetime.date(2014,1,1)
 		cmpd_type = amortized_loan.CompoundType.MONTHLY
-		self.loan = amortized_loan.AmortizedLoan(self.amt, self.term, self.apr, start_date=start_date, compound_type=cmpd_type)
+		self.loan = amortized_loan.AmortizedLoan(self.amt, self.term, self.apr,
+		                                         start_date=start_date,
+		                                         compound_type=cmpd_type)
 
 	def tearDown(self):
 		pass
@@ -21,26 +23,29 @@ class TestAmortizedLoan(unittest.TestCase):
 		self.assertAlmostEqual(self.loan.minimum_payment, 1073.64, 2)
 
 	def test_final_results(self):
-		self.assertEqual(self.loan.last_payment_date, datetime.date(2014, 1, 1))
+		self.assertEqual(self.loan.last_payment_date, None)
 		self.assertAlmostEqual(self.loan.remaining_balance, self.amt)
-		self.assertAlmostEqual(self.loan.total_interest_paid, 0, 2)
+		self.assertAlmostEqual(self.loan.total_interest_paid(), 0, 2)
 
 		payments = self.loan.calculate_amortization_table()
 
-		self.assertEqual(self.loan.last_payment_date, datetime.date(2044, 1, 1))
+		self.assertEqual(self.loan.last_payment_date, datetime.date(2043, 12, 1))
 		self.assertAlmostEqual(self.loan.remaining_balance, 0)
-		self.assertAlmostEqual(self.loan.total_interest_paid, 186511.57, 2)
+		self.assertAlmostEqual(self.loan.total_interest_paid(), 186511.57, 2)
+		self.assertAlmostEqual(self.loan.total_interest_paid(2014), 9932.99, 2)
+		self.assertAlmostEqual(self.loan.total_interest_paid(2015), 9782.02, 2)
+		self.assertAlmostEqual(self.loan.total_interest_paid(2043), 342.25, 2)
 
 	def test_first_payment(self):
 		payments = self.loan.calculate_amortization_table()
-		self.assertEqual(payments[0].date, datetime.date(2014, 2, 1))
+		self.assertEqual(payments[0].date, datetime.date(2014, 1, 1))
 		self.assertAlmostEqual(payments[0].interest_amount, 833.33, 2)
 		self.assertAlmostEqual(payments[0].principle_amount, 240.31, 2)
 
 	def test_last_payment(self):
 		payments = self.loan.calculate_amortization_table()
-		self.assertEqual(payments[-1].date, datetime.date(2044, 1, 1))
-		self.assertEqual(self.loan.last_payment_date, datetime.date(2044, 1, 1))
+		self.assertEqual(payments[-1].date, datetime.date(2043, 12, 1))
+		self.assertEqual(self.loan.last_payment_date, datetime.date(2043, 12, 1))
 		self.assertAlmostEqual(payments[-1].interest_amount, 4.45, 2)
 		self.assertAlmostEqual(payments[-1].principle_amount, 1069.19, 2)
 

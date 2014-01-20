@@ -100,7 +100,8 @@ class AmortizedLoan(object):
         self.minimum_payment = self.compounder.minimum_payment()
 
         self.remaining_balance = self.purchase_amount
-        self.last_payment_date = start_date
+        self.start_date = start_date
+        self.last_payment_date = None
         self.payments = []
 
     def __str__(self):
@@ -108,11 +109,16 @@ class AmortizedLoan(object):
                                                                         term=self.term_in_years,
                                                                         apr=self.apr)
 
-    @property
-    def total_interest_paid(self):
+    def total_interest_paid(self, year=None):
+        """ Return total interest paid for the given year. If `year` is None, return total
+        interest paid for all years.
+        """
         if not self.payments:
             return 0
-        return sum((p.interest_amount for p in self.payments))
+        if year is not None:
+            return sum((p.interest_amount for p in self.payments if p.date.year == year))
+        else:
+            return sum((p.interest_amount for p in self.payments))
 
     def _add_month(self, date):
         date = datetime.combine(date, datetime.min.time())
@@ -124,7 +130,11 @@ class AmortizedLoan(object):
             return
 
         payment_amount = payment_amount if payment_amount is not None else self.minimum_payment
-        payment_date = payment_date if payment_date is not None else self._add_month(self.last_payment_date)
+        if payment_date is None:
+            if self.last_payment_date is not None:
+                payment_date = self._add_month(self.last_payment_date)
+            else:
+                payment_date = self.start_date
 
         payment = Payment(self, payment_date, payment_amount)
         self.payments.append(payment)
