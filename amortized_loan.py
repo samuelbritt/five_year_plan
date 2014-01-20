@@ -1,6 +1,7 @@
 
 import numpy as np
-import datetime
+from datetime import datetime, date
+from dateutil.relativedelta import relativedelta
 import calendar
 
 import enum
@@ -85,7 +86,7 @@ class CompunderFactory(object):
 
 class AmortizedLoan(object):
     """docstring for AmortizedLoan"""
-    def __init__(self, purchase_amount, term_in_years, apr, start_date=datetime.date(2014, 1, 1), compound_type=CompoundType.MONTHLY):
+    def __init__(self, purchase_amount, term_in_years, apr, start_date, compound_type):
         super().__init__()
         self.purchase_amount = purchase_amount
         self.term_in_years = term_in_years
@@ -100,27 +101,28 @@ class AmortizedLoan(object):
         self.last_payment_date = start_date
         self.payments = []
 
+    def __str__(self):
+        return "AmortizedLoan: {amt} for {term} years at {apr}%".format(amt=self.purchase_amount,
+                                                                        term=self.term_in_years,
+                                                                        apr=self.apr)
+
     @property
     def total_interest_paid(self):
         if not self.payments:
             return 0
         return sum((p.interest_amount for p in self.payments))
 
-    def __str__(self):
-        return "AmortizedLoan: {amt} for {term} years at {apr}%".format(amt=self.purchase_amount,
-                                                                        term=self.term_in_years,
-                                                                        apr=self.apr)
-
-    def add_month(self, date):
-        days_in_month = calendar.monthrange(date.year, date.month)[1]
-        return date + datetime.timedelta(days_in_month)
+    def _add_month(self, date):
+        date = datetime.combine(date, datetime.min.time())
+        one_month = relativedelta(months=1)
+        return (date + one_month).date()
 
     def make_payment(self, payment_amount=None, payment_date=None):
         if self.remaining_balance == 0:
             return
 
         payment_amount = payment_amount if payment_amount is not None else self.min_payment
-        payment_date = payment_date if payment_date is not None else self.add_month(self.last_payment_date)
+        payment_date = payment_date if payment_date is not None else self._add_month(self.last_payment_date)
 
 
         payment = Payment(payment_date, payment_amount, self.remaining_balance, self.compounder)
