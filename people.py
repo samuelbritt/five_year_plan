@@ -55,7 +55,7 @@ class Family(object):
         self.state_of_residence = state_of_residence
 
         self._additional_deductions = {}
-        self.mortgage = None
+        self.home = None
         self.student_loan = None
 
     def __str__(self):
@@ -77,13 +77,13 @@ class Family(object):
         return len(self.members)
 
     def owns_home(self):
-        return self.mortgage is not None
+        return self.home is not None
 
     @property
     def home_value(self):
         value = 0
-        if owns_home():
-            value = self.mortgage.current_home_value
+        if self.owns_home():
+            value = self.home.current_value
         return value    
 
     def add_deduction(self, year, deduction):
@@ -106,8 +106,8 @@ class Family(object):
 
     def mortgage_interest_payments(self, year):
         interest = 0
-        if self.mortgage is not None:
-            interest = self.mortgage.total_interest_paid(year)
+        if self.home is not None:
+            interest = self.home.total_interest_paid(year)
         return interest
 
     def itemized_deductions(self, year):

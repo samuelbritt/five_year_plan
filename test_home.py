@@ -127,7 +127,7 @@ class TestMortgage30Down(unittest.TestCase):
 
     def test_table(self):
         return
-        # pprint(self.loan.calculate_amortization_table())
+        pprint(self.loan.calculate_amortization_table())
 
 if __name__ == '__main__':
     unittest.main()

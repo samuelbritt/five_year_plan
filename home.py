@@ -28,10 +28,10 @@ class HomePayment(object):
 
 class PMI(object):
     """docstring for PMI"""
-    def __init__(self, home, rate=0.015):
+    def __init__(self, home, rate=None):
         super().__init__()
         self.home = home
-        self.rate = rate
+        self.rate = rate or 0.015
 
     @property
     def standard_monthly_pmi_payment(self):

@@ -272,7 +272,7 @@ class StateIncomeTaxCalculator(StateCalculator):
         bracket_calculator = TaxBracketCalculator(self.family, self.year, self.tax_data, self.state_agi_calculator)
         return bracket_calculator.calculate()
 
-class StatePropertyTaxCalculator(StateCalculator):
+class StatePropertyTaxCalculator(PropertyCalculator):
     """docstring for StateIncomeTaxCalculator"""
     def __init__(self, family, year, tax_data=None):
         super().__init__(family, year, tax_data)
@@ -292,12 +292,23 @@ class TaxCalculator(Calculator):
             year,
             federal_income_tax_calculator=None,
             fica_tax_calculator=None,
-            state_income_tax_calculator=None
+            state_income_tax_calculator=None,
+            state_property_tax_calculator=None
         ):
         super().__init__(family, year)
         self._federal_income_tax_calculator = federal_income_tax_calculator
         self._fica_tax_calculator = fica_tax_calculator
         self._state_income_tax_calculator = state_income_tax_calculator
+        self._state_property_tax_calculator = state_property_tax_calculator
+
+    @property
+    def state_property_tax_calculator(self):
+        if self._state_property_tax_calculator is None:
+            self._state_property_tax_calculator = StatePropertyTaxCalculator(self.family, self.year)
+        return self._state_property_tax_calculator
+    @state_property_tax_calculator.setter
+    def state_property_tax_calculator(self, value):
+        self._state_property_tax_calculator = value
 
     @property
     def state_income_tax_calculator(self):
@@ -345,10 +356,14 @@ class TaxCalculator(Calculator):
     @property
     def state_taxes(self):
         return self.state_income_tax_calculator.calculate()
+    
+    @property
+    def property_taxes(self):
+        return self.state_property_tax_calculator.calculate()
 
     @property
     def total_taxes(self):
-        return sum((self.federal_taxes, self.state_taxes, self.fica_taxes))
+        return sum((self.federal_taxes, self.state_taxes, self.fica_taxes, self.property_taxes))
 
     def calculate(self):
         return self.total_taxes
