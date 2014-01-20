@@ -2,6 +2,7 @@ import unittest
 
 import people
 import tax_calculators
+import common_loans
 import data
 
 class MockFederalTaxDao(data.FederalTaxDao):
@@ -65,6 +66,18 @@ class TestStudentLoan(unittest.TestCase):
         def calculate(self):
             return self.family.gross_income(self.year)
 
+    class MockStudentLoan(common_loans.StudentLoan):
+        def __init__(self):
+            super().__init__()
+            self._interest_paid = 0
+        
+        def make_payment(self, payment_amount, payement_date):
+            self._interest_paid = payment_amount
+
+        def total_interest_paid(self, year):
+            return self._interest_paid
+
+
     def setUp(self):
         self.year = 2013
         self.p1 = people.Person("p1")
@@ -98,6 +111,7 @@ class TestStudentLoan(unittest.TestCase):
         self.family_rich =     people.Family((self.p4, self.p5), data.FilingStatus.MARRIED_JOINT)
 
         self.mock_tax_data = MockFederalTaxData(self.year, data.FilingStatus.MARRIED_JOINT)
+        self.mock_student_loan = self.MockStudentLoan()
 
     def tearDown(self):
         pass
@@ -110,6 +124,8 @@ class TestStudentLoan(unittest.TestCase):
         student_loan_interest_deduction_calculator = tax_calculators.StudentLoanInterestDeductionCalculator(family, self.year)
         student_loan_interest_deduction_calculator.federal_tax_data = self.mock_tax_data
         student_loan_interest_deduction_calculator.magi_calculator = mock_magi_calculator
+
+        family.student_loan = self.mock_student_loan
         return student_loan_interest_deduction_calculator
 
     def test_student_loan_interest_deduction_noIncome(self):
@@ -122,42 +138,42 @@ class TestStudentLoan(unittest.TestCase):
         # low income, low interest paid: Should get full deduction
         family = self.family_poor
         student_loan_interest_deduction_calculator = self.get_mocked_student_loan_interest_deduction_calculator(family)
-        family.pay_student_loan_interest(self.year, 800)
+        family.student_loan.make_payment(800, self.year)
         self.assertAlmostEqual(student_loan_interest_deduction_calculator.calculate(), 800)
 
     def test_student_loan_interest_deduction_low_income_high_interest(self):
         # low income, low interest paid: Should get full deduction
         family = self.family_poor
         student_loan_interest_deduction_calculator = self.get_mocked_student_loan_interest_deduction_calculator(family)
-        family.pay_student_loan_interest(self.year, 2700)
+        family.student_loan.make_payment(2700, self.year)
         self.assertAlmostEqual(student_loan_interest_deduction_calculator.calculate(), 2500)
 
     def test_student_loan_interest_deduction_mid_income_low_interest(self):
         # mid income, low interest paid: Should get full deduction
         family = self.family_midClass
         student_loan_interest_deduction_calculator = self.get_mocked_student_loan_interest_deduction_calculator(family)
-        family.pay_student_loan_interest(self.year, 800)
+        family.student_loan.make_payment(800, self.year)
         self.assertAlmostEqual(student_loan_interest_deduction_calculator.calculate(), 800)
 
     def test_student_loan_interest_deduction_mid_income_high_interest(self):
         # mid income, high interest paid: Should get full deduction
         family = self.family_midClass
         student_loan_interest_deduction_calculator = self.get_mocked_student_loan_interest_deduction_calculator(family)
-        family.pay_student_loan_interest(self.year, 8000)
+        family.student_loan.make_payment(8000, self.year)
         self.assertAlmostEqual(student_loan_interest_deduction_calculator.calculate(), 2500)
 
     def test_student_loan_interest_deduction_high_income_low_interest(self):
         # very high income, low interest paid: deduction is phased out
         family = self.family_rich
         student_loan_interest_deduction_calculator = self.get_mocked_student_loan_interest_deduction_calculator(family)
-        family.pay_student_loan_interest(self.year, 800)
+        family.student_loan.make_payment(800, self.year)
         self.assertAlmostEqual(student_loan_interest_deduction_calculator.calculate(), 266.66666667)
 
     def test_student_loan_interest_deduction_high_income_high_interest(self):
         # very high income, low interest paid: deduction is phased out
         family = self.family_rich
         student_loan_interest_deduction_calculator = self.get_mocked_student_loan_interest_deduction_calculator(family)
-        family.pay_student_loan_interest(self.year, 2700)
+        family.student_loan.make_payment(2700, self.year)
         self.assertAlmostEqual(student_loan_interest_deduction_calculator.calculate(), 833.3333333)
 
 class TestFicaTax(unittest.TestCase):

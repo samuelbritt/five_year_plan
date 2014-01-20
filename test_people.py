@@ -100,28 +100,17 @@ class TestFamily(unittest.TestCase):
         f = people.Family((p1, p2), FilingStatus.MARRIED_JOINT)
         self.assertAlmostEqual(f.retirement_contribution(2013), 9990, -1)
 
-    def test_deductions(self):
-        self.assertEqual(self.family_noIncome.deductions(2010), 0)
+    def test_itemized_deductions(self):
+        self.assertEqual(self.family_noIncome.itemized_deductions(2010), 0)
         
         d = people.Deduction('mortgage', 100)
-        self.family_noIncome.deduct(2010, d)
-        self.family_noIncome.deduct(2010, d)
-        self.family_noIncome.deduct(2011, d)
+        self.family_noIncome.add_deduction(2010, d)
+        self.family_noIncome.add_deduction(2010, d)
+        self.family_noIncome.add_deduction(2011, d)
 
-        self.assertEqual(self.family_noIncome.deductions(2010), 200)
-        self.assertEqual(self.family_noIncome.deductions(2011), 100)
-        self.assertEqual(self.family_noIncome.deductions(2012), 0)
-
-    def test_student_loan_interest(self):
-        self.assertEqual(self.family_noIncome.student_loan_interest_payments(2010), 0)
-        
-        self.family_noIncome.pay_student_loan_interest(2010, 100)
-        self.family_noIncome.pay_student_loan_interest(2010, 100)
-        self.family_noIncome.pay_student_loan_interest(2011, 100)
-
-        self.assertEqual(self.family_noIncome.student_loan_interest_payments(2010), 200)
-        self.assertEqual(self.family_noIncome.student_loan_interest_payments(2011), 100)
-        self.assertEqual(self.family_noIncome.student_loan_interest_payments(2012), 0)
+        self.assertEqual(self.family_noIncome.itemized_deductions(2010), 200)
+        self.assertEqual(self.family_noIncome.itemized_deductions(2011), 100)
+        self.assertEqual(self.family_noIncome.itemized_deductions(2012), 0)
 
 if __name__ == '__main__':
     unittest.main()

@@ -13,7 +13,6 @@ class Person(object):
         self._healthcare_contribution = {}
         self._retirement_contribution_rate = {}
 
-
     def gross_income(self, year):
         if year in self._gross_income:
             return float(self._gross_income[year])
@@ -54,8 +53,10 @@ class Family(object):
         self.members = members
         self.filing_status = filing_status
         self.state_of_residence = state_of_residence
-        self._deductions = {}
-        self._student_loan_interest_payments = {}
+
+        self._additional_deductions = {}
+        self.mortgage = None
+        self.student_loan = None
 
     def __str__(self):
         return "Family({})".format(
@@ -75,26 +76,31 @@ class Family(object):
     def member_count(self):
         return len(self.members)
 
-    def deduct(self, year, deduction):
-        if year in self._deductions:
-            self._deductions[year].append(deduction)
-        else:
-            self._deductions[year] = [deduction]
 
-    def deductions(self, year):
-        if year in self._deductions:
-            return sum(d.amount for d in self._deductions[year])
+    def add_deduction(self, year, deduction):
+        if year in self._additional_deductions:
+            self._additional_deductions[year].append(deduction)
         else:
-            return 0
+            self._additional_deductions[year] = [deduction]
 
-    def pay_student_loan_interest(self, year, amount):
-        if year in self._student_loan_interest_payments:
-            self._student_loan_interest_payments[year].append(amount)
-        else:
-            self._student_loan_interest_payments[year] = [amount]
+    def _additional_deductions_for_year(self, year):
+        deductions = 0
+        if year in self._additional_deductions:
+            deductions = sum(d.amount for d in self._additional_deductions[year])
+        return deductions
 
     def student_loan_interest_payments(self, year):
-        if year in self._student_loan_interest_payments:
-            return sum(d for d in self._student_loan_interest_payments[year])
-        else:
-            return 0
+        interest = 0
+        if self.student_loan is not None:
+            interest = self.student_loan.total_interest_paid(year)
+        return interest
+
+    def mortgage_interest_payments(self, year):
+        interest = 0
+        if self.mortgage is not None:
+            interest = self.mortgage.total_interest_paid(year)
+        return interest
+
+    def itemized_deductions(self, year):
+        return (self.mortgage_interest_payments(year) + 
+                self._additional_deductions_for_year(year))

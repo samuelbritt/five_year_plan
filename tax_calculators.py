@@ -35,17 +35,6 @@ class FederalCalculator(Calculator):
     def get_new_tax_data(self):
         return data.FederalTaxData(self.year, self.family.filing_status)
 
-    # @property
-    # def tax_data(self):
-    #     if self._tax_data is None:
-    #         self._tax_data = data.FederalTaxData(self.year, self.family.filing_status)
-    #     return self._tax_data
-
-    # @tax_data.setter
-    # def tax_data(self, value):
-    #     self._tax_data = value
-
-
 class StateCalculator(Calculator):
     """docstring for StateCalculator"""
     def __init__(self, family, year, tax_data=None):
@@ -54,16 +43,6 @@ class StateCalculator(Calculator):
 
     def get_new_tax_data(self):
         return data.StateTaxData(self.family.state_of_residence, self.year, self.family.filing_status)
-
-    # @property
-    # def tax_data(self):
-    #     if self._tax_data is None:
-    #         self._tax_data = data.StateTaxData(self.family.state_of_residence, self.year, self.family.filing_status)
-    #     return self._tax_data
-
-    # @tax_data.setter
-    # def tax_data(self, value):
-    #     self._tax_data = value
 
 class MagiCalculator(FederalCalculator):
     """Calculates MAGI"""
@@ -74,7 +53,7 @@ class MagiCalculator(FederalCalculator):
         magi = (
             self.family.gross_income(self.year)
             - self.family.member_count * self.tax_data.exemption_amount_per_person
-            - max(self.tax_data.standard_deduction_amount, self.family.deductions(self.year))
+            - max(self.tax_data.standard_deduction_amount, self.family.itemized_deductions(self.year))
             - self.family.retirement_contribution(self.year)
             - self.family.healthcare_contribution(self.year)
         )
@@ -267,7 +246,7 @@ class StateAgiCalculator(StateCalculator):
         agi = (
             self.family.gross_income(self.year)
             - self.family.member_count * self.tax_data.exemption_amount_per_person
-            - max(self.tax_data.standard_deduction_amount, self.family.deductions(self.year))
+            - max(self.tax_data.standard_deduction_amount, self.family.itemized_deductions(self.year))
             - self.family.retirement_contribution(self.year)
         )
         return max(agi, 0.0)
