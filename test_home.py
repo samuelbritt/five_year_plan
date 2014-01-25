@@ -2,12 +2,12 @@ import unittest
 import datetime
 
 import home
-
+import month
 
 class TestMortgageZeroDown(unittest.TestCase):
     def setUp(self):
         
-        self.purchase_date = datetime.date(2014,1,1)
+        self.purchase_month = month.Month(datetime.date(2014,1,1))
         self.amt = 200000
         self.apr = 0.05
         self.term = 30
@@ -15,7 +15,7 @@ class TestMortgageZeroDown(unittest.TestCase):
         self.down_payment_percent = 0.0
 
         self.loan = home.Home()
-        self.loan.purchase_date = self.purchase_date
+        self.loan.purchase_month = self.purchase_month
         self.loan.purchase_amount = self.amt
         self.loan.apr = self.apr
         self.loan.down_payment_percent = self.down_payment_percent
@@ -32,14 +32,14 @@ class TestMortgageZeroDown(unittest.TestCase):
         self.assertAlmostEqual(self.loan.pmi_payment, 166.67, 2)
 
     def test_final_results(self):
-        self.assertEqual(self.loan.last_payment_date, None)
+        self.assertEqual(self.loan.last_payment_month, None)
         self.assertAlmostEqual(self.loan.remaining_balance, self.amt)
         self.assertAlmostEqual(self.loan.total_interest_paid(), 0, 2)
         self.assertAlmostEqual(self.loan.total_pmi_paid, 0, 2)
 
         payments = self.loan.calculate_amortization_table()
 
-        self.assertEqual(self.loan.last_payment_date, datetime.date(2043, 12, 1))
+        self.assertEqual(self.loan.last_payment_month, month.Month(datetime.date(2043, 12, 1)))
         self.assertAlmostEqual(self.loan.remaining_balance, 0)
         self.assertAlmostEqual(self.loan.total_pmi_paid, 21166.67, 2)
         self.assertAlmostEqual(self.loan.total_interest_paid(), 186511.57, 2)
@@ -49,15 +49,15 @@ class TestMortgageZeroDown(unittest.TestCase):
 
     def test_first_payment(self):
         payments = self.loan.calculate_amortization_table()
-        self.assertEqual(payments[0].date, datetime.date(2014, 1, 1))
+        self.assertEqual(payments[0].month, month.Month(datetime.date(2014, 1, 1)))
         self.assertAlmostEqual(payments[0].interest_amount, 833.33, 2)
         self.assertAlmostEqual(payments[0].principle_amount, 240.31, 2)
         self.assertAlmostEqual(payments[0].pmi_amount, 166.67, 2)
 
     def test_last_payment(self):
         payments = self.loan.calculate_amortization_table()
-        self.assertEqual(payments[-1].date, datetime.date(2043, 12, 1))
-        self.assertEqual(self.loan.last_payment_date, datetime.date(2043, 12, 1))
+        self.assertEqual(payments[-1].month, month.Month(datetime.date(2043, 12, 1)))
+        self.assertEqual(self.loan.last_payment_month, month.Month(datetime.date(2043, 12, 1)))
         self.assertAlmostEqual(payments[-1].interest_amount, 4.45, 2)
         self.assertAlmostEqual(payments[-1].principle_amount, 1069.19, 2)
         self.assertAlmostEqual(payments[-1].pmi_amount, 0, 2)
@@ -69,7 +69,7 @@ class TestMortgageZeroDown(unittest.TestCase):
 
 class TestMortgage30Down(unittest.TestCase):
     def setUp(self):
-        self.purchase_date = datetime.date(2014,1,1)
+        self.purchase_month = month.Month(datetime.date(2014,1,1))
         self.amt = 200000
         self.apr = 0.05
         self.term = 30
@@ -77,7 +77,7 @@ class TestMortgage30Down(unittest.TestCase):
         self.down_payment_percent = 0.30
 
         self.loan = home.Home()
-        self.loan.purchase_date = self.purchase_date
+        self.loan.purchase_month = self.purchase_month
         self.loan.purchase_amount = self.amt
         self.loan.apr = self.apr
         self.loan.down_payment_percent = self.down_payment_percent
@@ -95,14 +95,14 @@ class TestMortgage30Down(unittest.TestCase):
         self.assertAlmostEqual(self.loan.pmi_payment, 0, 2)
 
     def test_final_results(self):
-        self.assertEqual(self.loan.last_payment_date, None)
+        self.assertEqual(self.loan.last_payment_month, None)
         self.assertAlmostEqual(self.loan.remaining_balance, 140000)
         self.assertAlmostEqual(self.loan.total_interest_paid(), 0, 2)
         self.assertAlmostEqual(self.loan.total_pmi_paid, 0, 2)
 
         payments = self.loan.calculate_amortization_table()
 
-        self.assertEqual(self.loan.last_payment_date, datetime.date(2043, 12, 1))
+        self.assertEqual(self.loan.last_payment_month, month.Month(datetime.date(2043, 12, 1)))
         self.assertAlmostEqual(self.loan.remaining_balance, 0)
         self.assertAlmostEqual(self.loan.total_pmi_paid, 0, 2)
         self.assertAlmostEqual(self.loan.total_interest_paid(), 130558.10, 2)
@@ -112,15 +112,15 @@ class TestMortgage30Down(unittest.TestCase):
 
     def test_first_payment(self):
         payments = self.loan.calculate_amortization_table()
-        self.assertEqual(payments[0].date, datetime.date(2014, 1, 1))
+        self.assertEqual(payments[0].month, month.Month(datetime.date(2014, 1, 1)))
         self.assertAlmostEqual(payments[0].interest_amount, 583.33, 2)
         self.assertAlmostEqual(payments[0].principle_amount, 168.22, 2)
         self.assertAlmostEqual(payments[0].pmi_amount, 0, 2)
 
     def test_last_payment(self):
         payments = self.loan.calculate_amortization_table()
-        self.assertEqual(payments[-1].date, datetime.date(2043, 12, 1))
-        self.assertEqual(self.loan.last_payment_date, datetime.date(2043, 12, 1))
+        self.assertEqual(payments[-1].month, month.Month(datetime.date(2043, 12, 1)))
+        self.assertEqual(self.loan.last_payment_month, month.Month(datetime.date(2043, 12, 1)))
         self.assertAlmostEqual(payments[-1].interest_amount, 3.12, 2)
         self.assertAlmostEqual(payments[-1].principle_amount, 748.43, 2)
         self.assertAlmostEqual(payments[-1].pmi_amount, 0, 2)

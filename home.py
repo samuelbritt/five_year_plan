@@ -5,7 +5,7 @@ class HomePayment(object):
         super().__init__()
 
         self.mortgage_payment = mortgage_payment
-        self.date = mortgage_payment.date
+        self.month = mortgage_payment.month
         self.mortgage_payment_amount = mortgage_payment.payment_amount
         self.principle_amount = mortgage_payment.principle_amount
         self.interest_amount = mortgage_payment.interest_amount
@@ -17,8 +17,8 @@ class HomePayment(object):
         return self.__repr__()
 
     def __repr__(self):
-        return "Payment {date} {amt:>8.2f} ({princ:>8.2f} P, {int:>8.2f} I, {pmi:>8.2f} PMI {rem:>10.2f} R)".format(
-            date=self.date.isoformat(),
+        return "Payment {month} {amt:>8.2f} ({princ:>8.2f} P, {int:>8.2f} I, {pmi:>8.2f} PMI {rem:>10.2f} R)".format(
+            month=self.month,
             amt=self.total_payment_amount,
             princ=self.principle_amount,
             int=self.interest_amount,
@@ -46,14 +46,14 @@ class PMI(object):
 
 class Home(object):
     def __init__(self,
-                 purchase_date=None,
+                 purchase_month=None,
                  purchase_amount=None,
                  down_payment_percent=None,
                  apr=None,
                  term_in_years=None,
                  pmi_rate=None):
         super().__init__()
-        self.purchase_date = purchase_date
+        self.purchase_month = purchase_month
         self.purchase_amount = purchase_amount
         self.down_payment_percent = down_payment_percent
         self.apr = apr
@@ -81,7 +81,7 @@ class Home(object):
     @property
     def mortgage(self):
         if self._mortgage is None:
-            self._mortgage = common_loans.Mortgage(self.purchase_date,
+            self._mortgage = common_loans.Mortgage(self.purchase_month,
                                                    self.purchase_amount,
                                                    self.down_payment_percent,
                                                    self.apr,
@@ -101,8 +101,8 @@ class Home(object):
         return self.mortgage.minimum_payment
 
     @property
-    def last_payment_date(self):
-        return self.mortgage.last_payment_date
+    def last_payment_month(self):
+        return self.mortgage.last_payment_month
 
     def total_interest_paid(self, year=None):
         return self.mortgage.total_interest_paid(year)
@@ -124,9 +124,9 @@ class Home(object):
             return 0
         return sum(p.pmi_amount for p in self.payments)
 
-    def make_monthly_payment(self, payment_date=None):
+    def make_monthly_payment(self, payment_month=None):
         pmi_payment = self.pmi.pmi_payment
-        mortgage_payment = self.mortgage.make_payment(payment_date)
+        mortgage_payment = self.mortgage.make_payment(payment_month)
         home_payment = HomePayment(mortgage_payment, pmi_payment)
         self.payments.append(home_payment)
         return home_payment
