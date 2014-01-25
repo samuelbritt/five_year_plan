@@ -117,6 +117,10 @@ class FederalAgiCalculator(FederalCalculator):
     def student_loan_interest_deduction_calculator(self, value):
         self._student_loan_interest_deduction_calculator = value
 
+    @property
+    def student_loan_interest_deduction(self):
+        return self.student_loan_interest_deduction_calculator.calculate()
+
     def calculate(self):
         magi = self.magi_calculator.calculate()
         student_loan_interest_deduction = self.student_loan_interest_deduction_calculator.calculate()
@@ -175,6 +179,14 @@ class FederalIncomeTaxCalculator(FederalCalculator):
     @property
     def agi(self):
         return self.federal_agi_calculator.calculate()
+
+    @property
+    def student_loan_interest_deduction(self):
+        return self.federal_agi_calculator.student_loan_interest_deduction    
+
+    @property
+    def standard_deduction(self):
+        return self.tax_data.standard_deduction_amount
 
     def calculate(self):
         bracket_calculator = TaxBracketCalculator(self.family, self.year, self.tax_data, self.federal_agi_calculator)
@@ -336,6 +348,14 @@ class TaxCalculator(Calculator):
     @fica_tax_calculator.setter
     def fica_tax_calculator(self, value):
         self._fica_tax_calculator = value
+
+    @property
+    def federal_standard_deduction(self):
+        return self.federal_income_tax_calculator.standard_deduction
+
+    @property
+    def student_loan_interest_deduction(self):
+        return self.federal_income_tax_calculator.student_loan_interest_deduction
 
     @property
     def federal_agi(self):
