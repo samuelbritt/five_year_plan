@@ -70,10 +70,9 @@ class DailyCompounder(Compunder):
         return self.loan.term_in_years * 365.25
 
     def minimum_payment(self):
-        return -self.days_in_month * np.pmt(self.daily_rate, self.days, self.loan.purchase_amount)
+        return -self.days_in_month * np.pmt(self.daily_rate, self.term_in_days, self.loan.purchase_amount)
     def interest_amount(self, payment_date):
-        days_since_last_payment = (payment_date - self.loan.last_payment_date).days
-        return (self.daily_rate * days_since_last_payment) * self.loan.remaining_balance
+        return (self.daily_rate * self.loan.days_since_last_payment(payment_date)) * self.loan.remaining_balance
 
 class CompunderFactory(object):
     def __init__(self, amortized_loan):
@@ -125,16 +124,28 @@ class AmortizedLoan(object):
         one_month = relativedelta(months=1)
         return (date + one_month).date()
 
+    def days_since_last_payment(self, date):
+        if self.last_payment_date is None:
+            return 0
+        else:
+            return (date - self.last_payment_date).days
+
+    def get_default_payment_date(self):
+        if self.last_payment_date is not None:
+            payment_date = self._add_month(self.last_payment_date)
+        else:
+            payment_date = self.start_date
+        return payment_date
+
     def make_payment(self, payment_amount=None, payment_date=None):
         if self.remaining_balance == 0:
             return
 
-        payment_amount = payment_amount if payment_amount is not None else self.minimum_payment
         if payment_date is None:
-            if self.last_payment_date is not None:
-                payment_date = self._add_month(self.last_payment_date)
-            else:
-                payment_date = self.start_date
+            payment_date = self.get_default_payment_date()
+        if payment_amount is None:
+            payment_amount = self.minimum_payment
+
 
         payment = Payment(self, payment_date, payment_amount)
         self.payments.append(payment)
