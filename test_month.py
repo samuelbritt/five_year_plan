@@ -5,8 +5,9 @@ import month
 
 class TestMonth(unittest.TestCase):
     def setUp(self):
-        self.m1 = month.Month(date(2014, 1, 25))
-        self.m2 = month.Month(date(2015, 3, 20))
+
+        self.m1 = month.Month(2014, 1)
+        self.m2 = month.Month(2015, 3)
 
         # Tested in sql server:
         # DECLARE @d1 date = '2014-1-25'
@@ -25,6 +26,13 @@ class TestMonth(unittest.TestCase):
 
     def tearDown(self):
         pass
+
+    def test_fromdate(self):
+        d1 = date(2015, 3, 1)
+        d2 = date(2015, 3, 20)
+
+        self.assertEqual(month.Month.fromdate(d1), self.m2)
+        self.assertEqual(month.Month.fromdate(d2), self.m2)
 
     def test_datediff_year(self):
         part = month.DatePart.YEAR
@@ -56,9 +64,18 @@ class TestMonth(unittest.TestCase):
         diff = self.m2.datediff(part, self.m1)
         self.assertEqual(diff, -424)
 
-    def tst_add_monts(self):
-        assertEqual(m1.add_months(14), m2) 
-        assertEqual(m2.add_months(-14), m1) 
+    def test_monthadd(self):
+        self.assertEqual(self.m1.monthadd(14), self.m2)
+        self.assertEqual(self.m2.monthadd(-14), self.m1)
+
+    def test_cmp(self):
+        self.assertTrue(self.m1 != self.m2)
+        self.assertTrue(self.m1 < self.m2)
+        self.assertTrue(self.m1 <= self.m2)
+        self.assertTrue(self.m2 > self.m1)
+        self.assertTrue(self.m2 >= self.m1)
+        self.assertFalse(self.m1 == self.m2)
+        self.assertFalse(self.m1 > self.m2)
 
 
 if __name__ == '__main__':

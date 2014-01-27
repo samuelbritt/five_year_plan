@@ -125,7 +125,7 @@ class AmortizedLoan(object):
 
     def get_default_payment_month(self):
         if self.last_payment_month is not None:
-            payment_month = self.last_payment_month.add_months(1)
+            payment_month = self.last_payment_month.monthadd(1)
         else:
             payment_month = self.start_month
         return payment_month

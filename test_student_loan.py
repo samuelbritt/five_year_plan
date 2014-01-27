@@ -1,5 +1,4 @@
 import unittest
-import datetime
 from pprint import pprint
 
 import common_loans
@@ -10,7 +9,7 @@ import month
 class TestStudentLoan(unittest.TestCase):
     def setUp(self):
         
-        self.month = month.Month(datetime.date(2014,1,1))
+        self.month = month.Month(2014,1,)
         self.amt = 130000
         self.apr = 0.065
         self.term = 10

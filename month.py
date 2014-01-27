@@ -6,14 +6,21 @@ import enum
 DatePart = enum.Enum(('YEAR', 'MONTH', 'DAY'))
 
 class Month(object):
-    def __init__(self, date_):
+    def __init__(self, year, month):
         super().__init__()
-        self._date = date(date_.year, date_.month, 1)
+        self._date = date(year, month, 1)
+
+    @classmethod
+    def fromdate(cls, date_):
+        return cls(date_.year, date_.month)
 
     def __repr__(self):
-        return self.__class__.__name__ + '(' + repr(self._date) + ')'
+        return self.__class__.__name__ + '(' + repr(self._date.year) + ', ' + repr(self._date.month) + ')'
     def __str__(self):
         return self._date.strftime('%Y-%b')
+
+    def __hash__(self):
+        return self._date.__hash__()
  
     def __eq__(self, other):
         if type(other) is type(self):
@@ -22,6 +29,22 @@ class Month(object):
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+    def __gt__(self, other):
+        if type(other) is type(self):
+            return self._date > other._date
+        return False
+
+    def __lt__(self, other):
+        if type(other) is type(self):
+            return self._date < other._date
+        return False
+
+    def __ge__(self, other):
+        return self.__gt__(other) or self.__eq__(other)
+
+    def __le__(self, other):
+        return self.__lt__(other) or self.__eq__(other)
 
     @property
     def year(self):
@@ -34,9 +57,9 @@ class Month(object):
     def as_datetime(self):
         return datetime.combine(self._date, datetime.min.time())
 
-    def add_months(self, month_count):
+    def monthadd(self, month_count):
         month_delta = relativedelta(months=month_count)
-        return Month((self.as_datetime() + month_delta).date())
+        return Month.fromdate((self.as_datetime() + month_delta).date())
 
     def datediff(self, date_part, other):
         diff = relativedelta(other.as_datetime(), self.as_datetime())
